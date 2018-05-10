@@ -1,0 +1,22 @@
+image: debian/stretch
+packages:
+  - rsync
+  - ruby
+  - ruby-dev
+  - zlib1g-dev
+sources:
+  - https://github.com/emersion/mako#website
+environment:
+  deploy: mako@mako-project.org
+secrets:
+  - 9781d368-6f6e-47f0-b393-b960527ce9a0
+tasks:
+  - setup: |
+      sudo gem install github-pages
+  - build: |
+      cd mako
+      jekyll build
+  - deploy: |
+      cd mako
+      sshopts="-o StrictHostKeyChecking=no"
+      rsync --rsh="ssh $sshopts" -rP _site/ ${deploy}:/var/www/mako-project.org/
