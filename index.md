@@ -11,8 +11,10 @@ the layer-shell protocol.
 
 ## Releases
 
+- 2018-08-23: [**1.1**](https://github.com/emersion/mako/releases/tag/v1.1) is
+  now available (latest): [.tar.gz](https://github.com/emersion/mako/archive/v1.1.tar.gz)
 - 2018-06-08: [**1.0**](https://github.com/emersion/mako/releases/tag/v1.0) is
-  now available (latest): [.tar.gz](https://github.com/emersion/mako/archive/v1.0.tar.gz)
+  now available: [.tar.gz](https://github.com/emersion/mako/archive/v1.0.tar.gz)
 
 ## Development
 
