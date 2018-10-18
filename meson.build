@@ -17,13 +17,32 @@ add_project_arguments('-Wno-missing-braces', language: 'c')
 mako_inc = include_directories('include')
 
 cairo = dependency('cairo')
-libsystemd = dependency('libsystemd')
 pango = dependency('pango')
 pangocairo = dependency('pangocairo')
+sdbus = dependency(get_option('sdbus-provider'), required: get_option('sdbus'))
+subd = dependency('subd', required: !sdbus.found())
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
 
+mako_deps = []
+
+if sdbus.found()
+	mako_deps += sdbus
+	add_project_arguments('-DHAS_SDBUS')
+else
+	mako_deps += subd
+endif
+
 subdir('protocol')
+
+mako_deps += [
+	cairo,
+	client_protos,
+	libsystemd,
+	pango,
+	pangocairo,
+	wayland_client,
+]
 
 executable(
 	'mako',
@@ -41,14 +60,7 @@ executable(
 		'criteria.c',
 		'types.c',
 	]),
-	dependencies: [
-		cairo,
-		client_protos,
-		libsystemd,
-		pango,
-		pangocairo,
-		wayland_client,
-	],
+	dependencies: mako_deps,
 	include_directories: [mako_inc],
 	install: true,
 )
