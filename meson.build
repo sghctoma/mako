@@ -3,7 +3,7 @@ project(
 	'c',
 	version: '1.1.0',
 	license: 'MIT',
-	meson_version: '>=0.43.0',
+	meson_version: '>=0.47.0',
 	default_options: [
 		'c_std=c11',
 		'warning_level=2',
@@ -20,7 +20,7 @@ cairo = dependency('cairo')
 pango = dependency('pango')
 pangocairo = dependency('pangocairo')
 sdbus = dependency(get_option('sdbus-provider'), required: get_option('sdbus'))
-subd = dependency('subd', required: !sdbus.found())
+subd = dependency('subd', required: not sdbus.found())
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
 
@@ -40,20 +40,25 @@ subdir('protocol')
 mako_deps += [
 	cairo,
 	client_protos,
-	libsystemd,
+	sdbus,
 	pango,
 	pangocairo,
 	wayland_client,
 ]
+
+# epoll is a separate library in FreeBSD
+if host_machine.system() == 'freebsd'
+	mako_deps += dependency('epoll-shim')
+endif
 
 executable(
 	'mako',
 	files([
 		'config.c',
 		'event-loop.c',
-		dbus_dir + 'dbus.c',
-		dbus_dir + 'mako.c',
-		dbus_dir + 'xdg.c',
+		dbus_dir + '/dbus.c',
+		dbus_dir + '/mako.c',
+		dbus_dir + '/xdg.c',
 		'main.c',
 		'notification.c',
 		'pool-buffer.c',
