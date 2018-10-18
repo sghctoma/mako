@@ -75,7 +75,7 @@ static bool handle_reload(DBusConnection *conn,
 		DBusMessage *msg, void *data, DBusError *err) {
 	struct mako_state *state = data;
 
-	if (!reload_config(&state->config)) {
+	if (reload_config(&state->config, state->argc, state->argv) != 0) {
 		dbus_set_error_const(err,
 			"fr.emersion.Mako.InvalidConfig",
 			"Unable to parse configuration file");
