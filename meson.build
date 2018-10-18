@@ -28,9 +28,11 @@ mako_deps = []
 
 if sdbus.found()
 	mako_deps += sdbus
+	dbus_dir = 'dbus'
 	add_project_arguments('-DHAS_SDBUS')
 else
 	mako_deps += subd
+	dbus_dir = 'dbus.subd'
 endif
 
 subdir('protocol')
@@ -49,9 +51,9 @@ executable(
 	files([
 		'config.c',
 		'event-loop.c',
-		'dbus/dbus.c',
-		'dbus/mako.c',
-		'dbus/xdg.c',
+		dbus_dir + 'dbus.c',
+		dbus_dir + 'mako.c',
+		dbus_dir + 'xdg.c',
 		'main.c',
 		'notification.c',
 		'pool-buffer.c',
