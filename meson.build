@@ -72,8 +72,11 @@ executable(
 	install: true,
 )
 
+makoctl = sdbus.found() ? 'makoctl' : 'makoctl.libdbus'
+
 install_data(
-	'makoctl',
+	makoctl,
+	rename: 'makoctl',
 	install_dir: get_option('bindir'),
 	install_mode: 'rwxr-xr-x',
 )
