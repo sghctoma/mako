@@ -17,44 +17,78 @@ add_project_arguments('-Wno-missing-braces', language: 'c')
 mako_inc = include_directories('include')
 
 cairo = dependency('cairo')
-libsystemd = dependency('libsystemd')
 pango = dependency('pango')
 pangocairo = dependency('pangocairo')
+sdbus = dependency(get_option('sdbus-provider'), required: get_option('sdbus'))
+dbus1 = dependency('dbus-1', required: not sdbus.found())
 wayland_client = dependency('wayland-client')
 wayland_protos = dependency('wayland-protocols', version: '>=1.14')
 
-subdir('protocol')
+mako_deps = []
+mako_files = []
 
-executable(
-	'mako',
-	files([
-		'config.c',
-		'event-loop.c',
+if sdbus.found()
+	mako_deps += sdbus
+	mako_files += [
 		'dbus/dbus.c',
 		'dbus/mako.c',
 		'dbus/xdg.c',
-		'main.c',
-		'notification.c',
-		'pool-buffer.c',
-		'render.c',
-		'wayland.c',
-		'criteria.c',
-		'types.c',
-	]),
-	dependencies: [
-		cairo,
-		client_protos,
-		libsystemd,
-		pango,
-		pangocairo,
-		wayland_client,
-	],
+	]
+	add_project_arguments('-DHAS_SDBUS')
+else
+	mako_deps += dbus1
+	mako_files += [
+		'dbus.subd/list.c',
+		'dbus.subd/subd-core.c',
+		'dbus.subd/subd-vtable.c',
+		'dbus.subd/subd-watch.c',
+		'dbus.subd/dbus.c',
+		'dbus.subd/mako.c',
+		'dbus.subd/xdg.c',
+	]
+endif
+
+subdir('protocol')
+
+mako_deps += [
+	cairo,
+	client_protos,
+	sdbus,
+	pango,
+	pangocairo,
+	wayland_client,
+]
+
+mako_files += [
+	'config.c',
+	'event-loop.c',
+	'main.c',
+	'notification.c',
+	'pool-buffer.c',
+	'render.c',
+	'wayland.c',
+	'criteria.c',
+	'types.c',
+]
+
+# epoll is a separate library in FreeBSD
+if host_machine.system() == 'freebsd'
+	mako_deps += dependency('epoll-shim')
+endif
+
+executable(
+	'mako',
+	files(mako_files),
+	dependencies: mako_deps,
 	include_directories: [mako_inc],
 	install: true,
 )
 
+makoctl = sdbus.found() ? 'makoctl' : 'makoctl.libdbus'
+
 install_data(
-	'makoctl',
+	makoctl,
+	rename: 'makoctl',
 	install_dir: get_option('bindir'),
 	install_mode: 'rwxr-xr-x',
 )
