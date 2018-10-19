@@ -21,7 +21,7 @@ static bool handle_dismiss_all_notifications(DBusConnection *conn,
 	close_all_notifications(state, MAKO_NOTIFICATION_CLOSE_DISMISSED);
 	send_frame(state);
 
-	return subd_reply_empty_str_method_return(conn, msg, err);
+	return subd_reply_method_return(conn, msg, err, DBUS_TYPE_INVALID);
 }
 
 static bool handle_dismiss_last_notification(DBusConnection *conn,
@@ -38,7 +38,7 @@ static bool handle_dismiss_last_notification(DBusConnection *conn,
 	send_frame(state);
 
 done:
-	return subd_reply_empty_str_method_return(conn, msg, err);
+	return subd_reply_method_return(conn, msg, err, DBUS_TYPE_INVALID);
 }
 
 static bool handle_invoke_action(DBusConnection *conn,
@@ -68,7 +68,7 @@ static bool handle_invoke_action(DBusConnection *conn,
 	}
 
 done:
-	return subd_reply_empty_str_method_return(conn, msg, err);
+	return subd_reply_method_return(conn, msg, err, DBUS_TYPE_INVALID);
 }
 
 static bool handle_reload(DBusConnection *conn,
@@ -91,7 +91,7 @@ static bool handle_reload(DBusConnection *conn,
 
 	send_frame(state);
 
-	return subd_reply_empty_str_method_return(conn, msg, err);
+	return subd_reply_method_return(conn, msg, err, DBUS_TYPE_INVALID);
 }
 
 static const struct subd_member members[] = {

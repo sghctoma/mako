@@ -227,7 +227,7 @@ static bool handle_close_notification(DBusConnection *conn,
 		send_frame(state);
 	}
 
-	return subd_reply_empty_str_method_return(conn, msg, err);
+	return subd_reply_method_return(conn, msg, err, DBUS_TYPE_INVALID);
 }
 
 static bool handle_get_server_information(DBusConnection *conn,
