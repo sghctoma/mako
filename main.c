@@ -45,7 +45,15 @@ static bool init(struct mako_state *state) {
 		finish_dbus(state);
 		return false;
 	}
+#ifdef HAS_SDBUS
 	init_event_loop(&state->event_loop, state->bus, state->display);
+#else
+	if (!init_event_loop(&state->event_loop, state->bus, state->display)) {
+		finish_wayland(state);
+		finish_dbus(state);
+		return false;
+	}
+#endif
 	wl_list_init(&state->notifications);
 	return true;
 }

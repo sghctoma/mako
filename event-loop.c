@@ -1,14 +1,16 @@
-#define _POSIX_C_SOURCE 199309L
+#define _POSIX_C_SOURCE 200809L
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/timerfd.h>
 #include <time.h>
 #include <unistd.h>
 
 #include "event-loop.h"
 
+#ifdef HAS_SDBUS
 void init_event_loop(struct mako_event_loop *loop, sd_bus *bus,
 		struct wl_display *display) {
 	loop->fds[MAKO_EVENT_DBUS] = (struct pollfd){
@@ -30,6 +32,37 @@ void init_event_loop(struct mako_event_loop *loop, sd_bus *bus,
 	loop->display = display;
 	wl_list_init(&loop->timers);
 }
+#else
+bool init_event_loop(struct mako_event_loop *loop, DBusConnection *connection,
+		struct wl_display *display) {
+
+	struct pollfd pollfds[2];
+	pollfds[MAKO_EVENT_WAYLAND] = (struct pollfd){
+		.fd = wl_display_get_fd(display),
+		.events = POLLIN,
+	};
+	pollfds[MAKO_EVENT_TIMER] = (struct pollfd){
+		.fd = timerfd_create(CLOCK_MONOTONIC, TFD_CLOEXEC),
+		.events = POLLIN,
+	};
+
+	DBusError error;
+	dbus_error_init(&error);
+	loop->watches = subd_init_watches(connection, pollfds, MAKO_EVENT_COUNT,
+		&error);
+	if (loop->watches == NULL) {
+		fprintf(stderr, "failed to initialize loop: %s\n", error.message);
+		return false;
+	}
+
+	loop->fds = loop->watches->fds;
+	loop->bus = connection;
+	loop->display = display;
+	wl_list_init(&loop->timers);
+
+	return true;
+}
+#endif
 
 void finish_event_loop(struct mako_event_loop *loop) {
 	close(loop->fds[MAKO_EVENT_TIMER].fd);
@@ -42,7 +75,11 @@ void finish_event_loop(struct mako_event_loop *loop) {
 }
 
 static int poll_event_loop(struct mako_event_loop *loop) {
+#ifdef HAS_SDBUS
 	return poll(loop->fds, MAKO_EVENT_COUNT, -1);
+#else
+	return poll(loop->fds, loop->watches->length, -1);
+#endif
 }
 
 static void timespec_add(struct timespec *t, int delta_ms) {
@@ -176,6 +213,7 @@ int run_event_loop(struct mako_event_loop *loop) {
 			wl_display_cancel_read(loop->display);
 		}
 
+#ifdef HAS_SDBUS
 		if (loop->fds[MAKO_EVENT_DBUS].revents & POLLIN) {
 			while (1) {
 				ret = sd_bus_process(loop->bus, NULL);
@@ -194,6 +232,9 @@ int run_event_loop(struct mako_event_loop *loop) {
 				break;
 			}
 		}
+#else
+		subd_process_watches(loop->bus, loop->watches);
+#endif
 
 		if (loop->fds[MAKO_EVENT_WAYLAND].revents & POLLIN) {
 			ret = wl_display_read_events(loop->display);

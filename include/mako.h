@@ -1,8 +1,12 @@
 #ifndef _MAKO_H
 #define _MAKO_H
 
+#ifdef HAS_SDBUS
 #include <stdbool.h>
 #include <systemd/sd-bus.h>
+#else
+#include "subd.h"
+#endif
 #include <wayland-client.h>
 
 #include "config.h"
@@ -15,8 +19,12 @@ struct mako_state {
 	struct mako_config config;
 	struct mako_event_loop event_loop;
 
+#ifdef HAS_SDBUS
 	sd_bus *bus;
 	sd_bus_slot *xdg_slot, *mako_slot;
+#else
+	struct DBusConnection *bus;
+#endif
 
 	struct wl_display *display;
 	struct wl_registry *registry;
